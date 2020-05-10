@@ -23,3 +23,4 @@ timeslots will disappear.
 - Unit test 
 - Appointments management by expert.
 - Improve layout
+- Add localization
