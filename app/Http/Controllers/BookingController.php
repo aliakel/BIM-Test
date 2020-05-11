@@ -9,6 +9,7 @@ use BeInMedia\Models\Expert;
 use BeInMedia\Services\TimeSlot;
 use Exception;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
 class BookingController extends BaseController
@@ -40,11 +41,25 @@ class BookingController extends BaseController
      */
     public function store(AppointmentsRequest $request): JsonResponse
     {
-        $appointment = Appointment::create($request->only(['day', 'duration', 'from_time', 'to_time', 'user_id', 'expert_id']));
-        $time_slots=new TimeSlot($appointment->expert,null,$appointment->day);
+        $a=new TimeSlot(null,$this->tz);
+        $not_available=$a->check($request);
+        if($not_available){
+           $expert=Expert::find($request->expert_id);
+           $tz=$this->tz;
+        }else{
+            $appointment = Appointment::create($request->only(['day', 'duration', 'from_time', 'to_time', 'user_id', 'expert_id']));
+            $expert=$appointment->expert;
+            $tz=null;
+        }
+        $time_slots=new TimeSlot($expert,$tz,$request->day);
         $slots = $time_slots->getTimeSlots();
-        event(new NewAppointmentEvent($appointment->toArray(), $slots));
-        return response()->json(['status' => 'success', 'message' => 'Your appointment has been saved successfully', 'data' => route('appointments.index')]);
+        if($not_available){
+            return response()->json(['status' => 'warning', 'message' => 'This timeslot is not available, please select another', 'data' => $slots]);
+        }else{
+            /* Broadcast new slots to all users who book now on same date of same expert */
+            event(new NewAppointmentEvent($appointment->toArray(), $slots));
+            return response()->json(['status' => 'success', 'message' => 'Your appointment has been saved successfully', 'data' => route('appointments.index')]);
+        }
     }
 
     /**

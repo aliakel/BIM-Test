@@ -48,13 +48,16 @@ class AppointmentsRequest extends FormRequest
         /*Set start_time' and end_time' timezone to UTC */
         $to = Carbon::parse($book_date->format('Y-m-d') . ' ' . $to_time_input . ' ' . $timezone_offset)->setTimezone('UTC');
         $from = Carbon::parse($book_date->format('Y-m-d') . ' ' . $from_time_input . ' ' . $timezone_offset)->setTimezone('UTC');
-
         /*Merge new start_time and end_time (in UTC) with other user inputs */
+        $this->merge([
+            'day' => $from->format('Y-m-d')
+        ]);
         $this->merge([
             'to_time' => $to
         ]);
         $this->merge([
             'from_time' => $from
         ]);
+
     }
 }

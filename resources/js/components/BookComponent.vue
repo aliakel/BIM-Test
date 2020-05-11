@@ -25,9 +25,11 @@
             </div>
             <div class="form-group">
                 <label class="h4">Timeslot</label>
-                <select @change="setSlot($event)" class="form-control" name="slot">
-                    <option value="">Select time slot</option>
-                    <option :value="index" v-for="(slot,index) in duration_slots">{{slot.start+'-'+slot.end}}</option>
+                <select @change="setSlot($event)"  class="form-control" name="slot">
+                    <option :selected="!form.from" value="">Select time slot</option>
+                    <option :value="index" v-for="(slot,index) in duration_slots">
+                        {{slot.start+'-'+slot.end}}
+                    </option>
                 </select>
             </div>
             <div class="form-group" v-if="form.from && form.to">
@@ -87,7 +89,10 @@
                         if (data.data.status === 'success') {
                             self.times_slots = data.data.data;
                             self.duration_slots = self.times_slots[self.form.duration];
+                            self.form.from='';
+                            self.form.to='';
                             self.checkIfSlotsAvailable();
+
                         }
                         self.loading.loading = false;
 
@@ -116,19 +121,34 @@
                 }
                 self.loading.loading = true;
                 axios.post('/appointments', self.form).then(data => {
-                    self.loading.loading = false;
                     if (data.data.status === 'success') {
+                        self.$swal({
+                            title: data.data.message,
+                            type: data.data.status,
+                            showCancelButton: false,
+                            confirmButtonColor: "#DD6B55",
+                            confirmButtonText: 'Ok'
+                        }).then((result) => {
+                            if (result.value) {
+                                window.location.href = data.data.data;
+                            }
+                        });
+                    }else if (data.data.status === 'warning') {
+                        self.loading.loading = false;
                         self.$swal({
                             position: 'center',
                             icon: data.data.status,
                             html: data.data.message,
                             showConfirmButton: true
                         });
-                        setTimeout(function(){  window.location.href = data.data.data; }, 4000);
-
+                        self.times_slots = data.data.data;
+                        self.duration_slots = self.times_slots[self.form.duration];
+                        self.form.from='';
+                        self.form.to='';
+                        self.checkIfSlotsAvailable();
                     }
 
-                }).catch(() => {
+                }).catch((e) => {
                     self.loading.loading=false;
                 });
             },
@@ -179,6 +199,8 @@
                         if (message.user!=window.user_id && dt === formattedDate && message.expert == self.form.expert_id) {
                             self.times_slots = self.updateTimeSlots(message.slots);
                             self.duration_slots = self.times_slots[self.form.duration];
+                            self.form.from='';
+                            self.form.to='';
                             self.$swal({
                                 position: 'center',
                                 html: 'Timeslots changed',

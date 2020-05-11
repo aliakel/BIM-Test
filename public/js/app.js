@@ -2035,6 +2035,8 @@ __webpack_require__.r(__webpack_exports__);
 //
 //
 //
+//
+//
 
 
 /* harmony default export */ __webpack_exports__["default"] = ({
@@ -2082,6 +2084,8 @@ __webpack_require__.r(__webpack_exports__);
           if (data.data.status === 'success') {
             self.times_slots = data.data.data;
             self.duration_slots = self.times_slots[self.form.duration];
+            self.form.from = '';
+            self.form.to = '';
             self.checkIfSlotsAvailable();
           }
 
@@ -2113,20 +2117,33 @@ __webpack_require__.r(__webpack_exports__);
 
       self.loading.loading = true;
       axios.post('/appointments', self.form).then(function (data) {
-        self.loading.loading = false;
-
         if (data.data.status === 'success') {
+          self.$swal({
+            title: data.data.message,
+            type: data.data.status,
+            showCancelButton: false,
+            confirmButtonColor: "#DD6B55",
+            confirmButtonText: 'Ok'
+          }).then(function (result) {
+            if (result.value) {
+              window.location.href = data.data.data;
+            }
+          });
+        } else if (data.data.status === 'warning') {
+          self.loading.loading = false;
           self.$swal({
             position: 'center',
             icon: data.data.status,
             html: data.data.message,
             showConfirmButton: true
           });
-          setTimeout(function () {
-            window.location.href = data.data.data;
-          }, 4000);
+          self.times_slots = data.data.data;
+          self.duration_slots = self.times_slots[self.form.duration];
+          self.form.from = '';
+          self.form.to = '';
+          self.checkIfSlotsAvailable();
         }
-      })["catch"](function () {
+      })["catch"](function (e) {
         self.loading.loading = false;
       });
     },
@@ -2181,6 +2198,8 @@ __webpack_require__.r(__webpack_exports__);
         if (message.user != window.user_id && dt === formattedDate && message.expert == self.form.expert_id) {
           self.times_slots = self.updateTimeSlots(message.slots);
           self.duration_slots = self.times_slots[self.form.duration];
+          self.form.from = '';
+          self.form.to = '';
           self.$swal({
             position: 'center',
             html: 'Timeslots changed',
@@ -51059,13 +51078,19 @@ var render = function() {
             }
           },
           [
-            _c("option", { attrs: { value: "" } }, [
-              _vm._v("Select time slot")
-            ]),
+            _c(
+              "option",
+              { attrs: { value: "" }, domProps: { selected: !_vm.form.from } },
+              [_vm._v("Select time slot")]
+            ),
             _vm._v(" "),
             _vm._l(_vm.duration_slots, function(slot, index) {
               return _c("option", { domProps: { value: index } }, [
-                _vm._v(_vm._s(slot.start + "-" + slot.end))
+                _vm._v(
+                  "\n                    " +
+                    _vm._s(slot.start + "-" + slot.end) +
+                    "\n                "
+                )
               ])
             })
           ],

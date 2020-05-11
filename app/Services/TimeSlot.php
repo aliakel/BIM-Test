@@ -2,8 +2,11 @@
 
 namespace BeInMedia\Services;
 
+use BeInMedia\Http\Requests\AppointmentsRequest;
 use BeInMedia\Models\Appointment;
+use BeInMedia\Models\Expert;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class TimeSlot
 {
@@ -11,7 +14,7 @@ class TimeSlot
     protected $tz;
     protected $day;
 
-    public function __construct($expert, $tz = null, $day = null)
+    public function __construct($expert=null, $tz = null, $day = null)
     {
         $this->expert = $expert;
         $this->tz = $tz ? $tz : 'UTC';
@@ -41,8 +44,7 @@ class TimeSlot
         $available_slots = [];
 
         /* get user input day in utc*/
-        $date = $this->day ? $this->setTimeZone($this->day, 'UTC', 'Y-m-d') : Carbon::now()->format('Y-m-d');
-
+        $date = $this->day ? $this->setTimeZone($this->day, $this->tz, 'Y-m-d') :$this->setTimeZone(Carbon::now(), $this->tz, 'Y-m-d');
         /* get expert working start_time and end_time in visitor timezone*/
         $start_time = $this->setTimeZone($date . ' ' . $this->expert->start_time, $this->tz);
         $end_time = $this->setTimeZone($date . ' ' . $this->expert->end_time, $this->tz);
@@ -156,4 +158,48 @@ class TimeSlot
         }
         return $slots;
     }
+
+    public function checkIfSlotAvailable(AppointmentsRequest $request){
+        $appointments = Appointment::where('day', $request->day)
+            ->whereExpertId($request->expert_id)
+            ->OrderBy('from_time', 'asc')->get()->toArray();
+
+        $count=count($appointments);
+        for ($i = 0; $i < $count; $i++) {
+            $from=Carbon::parse($appointments[$i]['from_time']);
+            $to=Carbon::parse($appointments[$i]['to_time']);
+            if(Carbon::parse($request->from_time)->between($from, $to)
+                || Carbon::parse($request->to_time)->between($from, $to)
+            ){
+                return false;
+                break;
+            }
+        }
+        return true;
+    }
+    /*
+     * Check if slot is available or not
+     * @param $request AppointmentsRequest
+     * @return boolean
+     */
+    public function check(AppointmentsRequest $request){
+        $from=$request->from_time;
+        $to=$request->to_time;
+        $result=Appointment::where('expert_id',$request->expert_id)
+            ->where('day',$request->day)->get();
+        for ($i=0;$i<count($result);$i++){
+            if($from==$result[$i]->from_time && $to==$result[$i]->to_time){
+                return true;break;
+            }else{
+                if($from>=$result[$i]->from_time && $to<=$result[$i]->to_time||
+                    $from>=$result[$i]->to_time){
+                    continue;
+                }
+            }
+
+        }
+        return false;
+    }
+
+
 }
