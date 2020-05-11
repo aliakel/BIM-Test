@@ -13,6 +13,6 @@ class BaseController extends Controller
 
     public function __construct()
     {
-        $this->tz ='Europe/Madrid';// $this->getTimeZone('46.57.204.179');
+        $this->tz = $this->getTimeZone(request()->ip());
     }
 }

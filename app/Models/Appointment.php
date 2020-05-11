@@ -38,8 +38,4 @@ class Appointment extends Model
         return $this->belongsTo(Expert::class, 'expert_id');
     }
 
-
-    public function setDayAttribute($value){
-        $this->attributes['day']=Carbon::parse($value)->setTimezone('UTC')->format('Y-m-d');
-    }
 }
