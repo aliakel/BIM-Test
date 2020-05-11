@@ -21,6 +21,10 @@ class Expert extends Model
 
     protected $with = ['user:name,id'];
 
+    /**
+     * Expert' profile belong to one expert
+     * @return BelongsTo
+     */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id');

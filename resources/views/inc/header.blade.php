@@ -17,6 +17,9 @@
 
             <!-- Right Side Of Navbar -->
             <ul class="navbar-nav ml-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url('/') }}">{{ __('Experts') }}</a>
+                </li>
                 <!-- Authentication Links -->
                 @guest
                     <li class="nav-item">
@@ -27,6 +30,7 @@
                             <a class="nav-link" href="{{ route('register') }}">{{ __('Register') }}</a>
                         </li>
                     @endif
+
                 @else
                     <li class="nav-item">
                         <a class="nav-link" href="{{ route('appointments.index') }}">{{ __('My appointments') }}</a>

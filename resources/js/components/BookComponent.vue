@@ -10,7 +10,7 @@
                             :value="form.day">
 
                 </datepicker>
-                <p class="h5 py-2">Timezone: {{timezone}}</p>
+                <p class="h5 py-4 text-center">Timezone: {{timezone}}</p>
                 <p class="h5 py-2">Your time: {{customFormatter()}}</p>
             </div>
             <div class="form-group">
@@ -26,14 +26,14 @@
             <div class="form-group">
                 <label class="h4">Timeslot</label>
                 <select @change="setSlot($event)"  class="form-control" name="slot">
-                    <option :selected="!form.from" value="">Select time slot</option>
+                    <option :selected="!form.from_time" value="">Select time slot</option>
                     <option :value="index" v-for="(slot,index) in duration_slots">
-                        {{slot.start+'-'+slot.end}}
+                        {{slot.slot}}
                     </option>
                 </select>
             </div>
-            <div class="form-group" v-if="form.from && form.to">
-                {{'Your appointment will be on '+formattedDate()+' from '+form.from+' to '+form.to}}
+            <div class="form-group" v-if="form.from_time && form.to_time">
+                {{'Your appointment will be on '+formattedDate()+' from '+form.from_time+' to '+form.to_time}}
             </div>
             <div class="form-group text-center">
                 <button @click="saveAppointment" class="btn btn-md btn-primary">Submit</button>
@@ -78,8 +78,15 @@
         methods: {
             setSlot: function (e) {
                 let index = e.target.value;
-                this.form.from = this.duration_slots[index].start;
-                this.form.to = this.duration_slots[index].end;
+                this.form.from_time = this.duration_slots[index].start;
+                this.form.to_time = this.duration_slots[index].end;
+            },
+            reset:function(slots){
+                this.times_slots = slots;
+                this.duration_slots = this.times_slots[this.form.duration];
+                this.form.from_time='';
+                this.form.to_time='';
+                this.checkIfSlotsAvailable();
             },
             getSlots: function () {
                 let self = this;
@@ -87,15 +94,9 @@
                     self.loading.loading = true;
                     axios.post('/book/' + self.form.expert_id, {date: self.form.day}).then(data => {
                         if (data.data.status === 'success') {
-                            self.times_slots = data.data.data;
-                            self.duration_slots = self.times_slots[self.form.duration];
-                            self.form.from='';
-                            self.form.to='';
-                            self.checkIfSlotsAvailable();
-
+                           self.reset(data.data.data);
                         }
                         self.loading.loading = false;
-
                     }).catch(() => {
                         self.loading.loading = false;
                     });
@@ -110,7 +111,7 @@
             },
             saveAppointment() {
                 let self = this;
-                if (!this.form.from || !this.form.to) {
+                if (!this.form.from_time || !this.form.to_time) {
                     self.$swal({
                         position: 'center',
                         icon: 'error',
@@ -141,11 +142,7 @@
                             html: data.data.message,
                             showConfirmButton: true
                         });
-                        self.times_slots = data.data.data;
-                        self.duration_slots = self.times_slots[self.form.duration];
-                        self.form.from='';
-                        self.form.to='';
-                        self.checkIfSlotsAvailable();
+                        self.reset(data.data.data);
                     }
 
                 }).catch((e) => {
@@ -184,11 +181,17 @@
         },
         mounted() {
             if (this.other.user_id) this.form.user_id = this.other.user_id;
+
             if (this.other.expert_id) this.form.expert_id = this.other.expert_id;
+
             this.timezone = this.other.visitor_tz;
+
             this.times_slots = this.slots;
+
             this.duration_slots = this.slots[this.form.duration];
+
             this.checkIfSlotsAvailable();
+
             let self = this;
             if (typeof this.$echo !== "undefined") {
                 this.$echo.channel('appointment-channel')
@@ -197,17 +200,13 @@
                         let dt = moment.tz(message.date, self.other.timezone).format('YYYY-MM-DD');
                         let formattedDate = moment(self.form.day).format('YYYY-MM-DD');
                         if (message.user!=window.user_id && dt === formattedDate && message.expert == self.form.expert_id) {
-                            self.times_slots = self.updateTimeSlots(message.slots);
-                            self.duration_slots = self.times_slots[self.form.duration];
-                            self.form.from='';
-                            self.form.to='';
+                            self.reset(self.updateTimeSlots(message.slots));
                             self.$swal({
                                 position: 'center',
                                 html: 'Timeslots changed',
                                 icon: 'warning',
                                 showConfirmButton: true
                             });
-                            self.checkIfSlotsAvailable();
                         }
 
                     });

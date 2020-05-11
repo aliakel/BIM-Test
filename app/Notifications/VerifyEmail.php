@@ -1,6 +1,6 @@
 <?php
 
-namespace BeInMedia\Models;
+namespace BeInMedia\Notifications;
 
 use Carbon\Carbon;
 use Illuminate\Auth\Notifications\VerifyEmail as Notification;

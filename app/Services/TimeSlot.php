@@ -2,19 +2,38 @@
 
 namespace BeInMedia\Services;
 
-use BeInMedia\Http\Requests\AppointmentsRequest;
 use BeInMedia\Models\Appointment;
-use BeInMedia\Models\Expert;
 use Carbon\Carbon;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Database\Eloquent\Model;
 
+/**
+ * Class TimeSlot
+ * @package BeInMedia\Services
+ */
 class TimeSlot
 {
+    /**
+     * @var Model
+     */
     protected $expert;
+
+    /**
+     * @var string|null
+     */
     protected $tz;
+
+    /**
+     * @var string|null
+     */
     protected $day;
 
-    public function __construct($expert=null, $tz = null, $day = null)
+    /**
+     * TimeSlot constructor.
+     * @param Model $expert
+     * @param string|null $tz
+     * @param string|null $day
+     */
+    public function __construct(Model $expert, ?string $tz = null, ?string $day = null)
     {
         $this->expert = $expert;
         $this->tz = $tz ? $tz : 'UTC';
@@ -25,7 +44,7 @@ class TimeSlot
      * get available slots  for all duration
      * @return array
      */
-    public function getTimeSlots()
+    public function getTimeSlots(): array
     {
         $slots['15'] = $this->availableTimeSlots(15);
         $slots['30'] = $this->availableTimeSlots(30);
@@ -39,12 +58,12 @@ class TimeSlot
      * @param int $duration
      * @return array
      */
-    protected function availableTimeSlots($duration)
+    protected function availableTimeSlots($duration): array
     {
         $available_slots = [];
 
         /* get user input day in utc*/
-        $date = $this->day ? $this->setTimeZone($this->day, $this->tz, 'Y-m-d') :$this->setTimeZone(Carbon::now(), $this->tz, 'Y-m-d');
+        $date = $this->day ? $this->setTimeZone($this->day, $this->tz, 'Y-m-d') : $this->setTimeZone(Carbon::now(), $this->tz, 'Y-m-d');
         /* get expert working start_time and end_time in visitor timezone*/
         $start_time = $this->setTimeZone($date . ' ' . $this->expert->start_time, $this->tz);
         $end_time = $this->setTimeZone($date . ' ' . $this->expert->end_time, $this->tz);
@@ -57,13 +76,14 @@ class TimeSlot
                 return $available_slots;
             }
             /* Check if the current time is after the beginning of expert working time
-             * if true, set start time to current time plus 10 minutes (this for lost time when user choose book setting)
+             * if true, set start time to current time plus 1 hour and set minute and seconds to zero (ex: if now is 2:15, working start time will be 3:00)
              */
-            if ($now->gt($start_time->addMinutes(10))) {
-                $start_time = $now;
+            if ($now->gt($start_time)) {
+                $start_time = $now->addHour()->minute(0)->second(0);
             }
         }
         /* get all appointments which have been booked in user input day*/
+
         $appointments = Appointment::where('day', $date)
             ->whereExpertId($this->expert->id)
             ->OrderBy('from_time', 'asc')->get()->toArray();
@@ -93,7 +113,6 @@ class TimeSlot
                         $end_from = $this->setTimeZone($appointments[$i + 1]['from_time'], $this->tz);
                     }
                     if ($end_from->gt($start_form)) {
-
                         $available_slots = $this->calculateRanges($start_form, $end_from, $duration, $available_slots);
                     }
                 }
@@ -109,19 +128,18 @@ class TimeSlot
         return $available_slots;
     }
 
-    /*
-    * Calculate slots in a specific range of time
-    * 1- we calculate different between start and end of range in minutes
-    * 2- We divide $duration by result in step 1 then We round the result to the nearest smallest integer
-    * 3- loop through result by step 2 and set slot start and end in format g:i A
-    * @param Carbon $start
-    * @param Carbon $end
-    * @param int $duration
-    * @param array $slots
-    * @return array
-    */
 
-    protected function setTimeZone($date, $time_zone = null, $format = null)
+    /**
+     * Calculate slots in a specific range of time
+     * 1- we calculate different between start and end of range in minutes
+     * 2- We divide $duration by result in step 1 then We round the result to the nearest smallest integer
+     * 3- loop through result by step 2 and set slot start and end in format g:i A
+     * @param $date
+     * @param string|null $time_zone
+     * @param string|null $format
+     * @return Carbon|string
+     */
+    protected function setTimeZone($date, ?string $time_zone = null, ?string $format = null)
     {
         $result = Carbon::parse($date);
         if ($time_zone) {
@@ -133,15 +151,16 @@ class TimeSlot
         return $result;
     }
 
-    /*
-    * set time zone and format for specific date
-    * @param $date
-    * @param $time_zone
-    * @param $format
-    * @return mixed
-    */
+    /**
+     * Set time zone and format for specific date
+     * @param Carbon $start
+     * @param Carbon $end
+     * @param int $duration
+     * @param array $slots
+     * @return array
+     */
 
-    protected function calculateRanges(Carbon $start, Carbon $end, $duration, & $slots)
+    protected function calculateRanges(Carbon $start, Carbon $end, int $duration, array & $slots): array
     {
         $diff_in_minutes = $end->diffInMinutes($start);
         $num_of_slots = (int)floor($diff_in_minutes / $duration);
@@ -149,57 +168,16 @@ class TimeSlot
         if ($num_of_slots > 0) {
 
             for ($i = 0; $i < $num_of_slots; $i++) {
+                $copy = $start->copy();
                 $slots[] = [
-                    'start' => $start->format('g:i A'),
-                    'end' => $start->addMinutes($duration)->format('g:i A')
+                    'start' => $copy->format('Y-m-d\TH:i:s.uP '),
+                    'end' => $copy->addMinutes($duration)->format('Y-m-d\TH:i:s.uP '),
+                    'slot' => $start->format('g:iA') . ' - ' . $start->addMinutes($duration)->format('g:iA')
                 ];
 
             }
         }
         return $slots;
     }
-
-    public function checkIfSlotAvailable(AppointmentsRequest $request){
-        $appointments = Appointment::where('day', $request->day)
-            ->whereExpertId($request->expert_id)
-            ->OrderBy('from_time', 'asc')->get()->toArray();
-
-        $count=count($appointments);
-        for ($i = 0; $i < $count; $i++) {
-            $from=Carbon::parse($appointments[$i]['from_time']);
-            $to=Carbon::parse($appointments[$i]['to_time']);
-            if(Carbon::parse($request->from_time)->between($from, $to)
-                || Carbon::parse($request->to_time)->between($from, $to)
-            ){
-                return false;
-                break;
-            }
-        }
-        return true;
-    }
-    /*
-     * Check if slot is available or not
-     * @param $request AppointmentsRequest
-     * @return boolean
-     */
-    public function check(AppointmentsRequest $request){
-        $from=$request->from_time;
-        $to=$request->to_time;
-        $result=Appointment::where('expert_id',$request->expert_id)
-            ->where('day',$request->day)->get();
-        for ($i=0;$i<count($result);$i++){
-            if($from==$result[$i]->from_time && $to==$result[$i]->to_time){
-                return true;break;
-            }else{
-                if($from>=$result[$i]->from_time && $to<=$result[$i]->to_time||
-                    $from>=$result[$i]->to_time){
-                    continue;
-                }
-            }
-
-        }
-        return false;
-    }
-
 
 }

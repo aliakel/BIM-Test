@@ -2,41 +2,68 @@
 
 namespace BeInMedia\Services;
 
-
 use DateTime;
 use DateTimeZone;
 use Exception;
 
+/**
+ * Trait TimeZone
+ * @package BeInMedia\Services
+ */
 trait TimeZone
 {
 
+    /**
+     * @param $value
+     * @param $tz
+     * @param string $format
+     * @return string
+     */
     public function convertToUtc($value, $tz, $format = "g:i A")
     {
-        date_default_timezone_set($tz);
-        $date = new DateTime($value);
-        $date->setTimezone(new DateTimeZone('UTC'));
+        try {
+            date_default_timezone_set($tz);
+            $date = new DateTime($value);
+            $date->setTimezone(new DateTimeZone('UTC'));
 
-        return $date->format($format);
+            return $date->format($format);
+        } catch (Exception $e) {
+            return $value;
+        }
     }
 
+    /**
+     * @param $value
+     * @param $tz
+     * @param string $format
+     * @return string
+     */
     public function convertFromUtc($value, $tz, $format = "g:i A")
     {
-        $date = new DateTime($value);
-        $date->setTimezone(new DateTimeZone($tz));
+        try {
+            $date = new DateTime($value);
+            $date->setTimezone(new DateTimeZone($tz));
+            return $date->format($format);
+        } catch (Exception $e) {
+            return $value;
+        }
 
-        return $date->format($format);
     }
 
-    public function getTimeZone($ip)
+    /**
+     * @param string $ip
+     * @return mixed|string
+     */
+    public function getTimeZone(string $ip)
     {
         $str = str_replace('.', '_', $ip);
         try {
             return cache()->remember($str, 300, function () use ($ip) {
                 $geo = $this->getVisitorGeoInfo($ip);
-                if(is_array($geo) && isset($geo['time_zone'])){
+                if (is_array($geo) && isset($geo['time_zone'])) {
                     return $geo['time_zone'];
                 }
-                return  'UTC';
+                return 'UTC';
             });
 
         } catch (Exception $e) {
@@ -46,6 +73,10 @@ trait TimeZone
 
     }
 
+    /**
+     * @param $ip
+     * @return bool|mixed
+     */
     function getVisitorGeoInfo($ip)
     {
 

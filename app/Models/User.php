@@ -62,11 +62,20 @@ class User extends Authenticatable
         $this->notify(new VerifyEmail());
     }
 
+    /**
+     *  User may has one expert profile
+     * @return HasOne
+     */
     public function expert(): HasOne
     {
         return $this->hasOne(Expert::class, 'user_id');
     }
 
+    /**
+     * Check if a user is expert
+     *
+     * @return string
+     */
     public function isExpert()
     {
         return !is_null($this->expert);

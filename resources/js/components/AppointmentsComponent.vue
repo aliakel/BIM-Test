@@ -3,20 +3,22 @@
         <table class="table table-striped">
             <thead>
                 <tr>
+                    <th scope="col" v-if="isExpert">User</th>
                     <th scope="col">Start on</th>
                     <th scope="col">End on</th>
                     <th scope="col">Duration</th>
-                    <th scope="col">Expert</th>
+                    <th scope="col" v-if="!isExpert">Expert</th>
                     <th scope="col">Actions</th>
                 </tr>
             </thead>
             <tbody>
                 <tr v-for="(appointment,index) in appointments" :key="appointment.id">
+                    <td v-if="isExpert"> {{appointment.user.name}} </td>
                     <td> {{getTimeInUserTimeZone(appointment.from_time)}} </td>
                     <td> {{getTimeInUserTimeZone(appointment.to_time)}} </td>
-                    <td> {{appointment.expert.user.name}} </td>
-                    <td> {{appointment.duration}} </td>
-                    <td> <a @click.prevent="remove(index)">Remove</a> </td>
+                    <td> {{appointment.duration}} Minutes</td>
+                    <td v-if="!isExpert"> {{appointment.expert.user.name}} </td>
+                    <td> <a class="btn btn-sm btn-danger text-white" @click.prevent="remove(index)">Remove</a> </td>
                 </tr>
             </tbody>
         </table>
@@ -32,6 +34,10 @@
             timezone:{
                 type:String,
                 default:'UTC'
+            },
+            isExpert:{
+                type:Boolean,
+                default:false
             }
         },
         data(){

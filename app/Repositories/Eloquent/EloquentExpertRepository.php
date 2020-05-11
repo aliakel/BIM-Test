@@ -1,31 +1,20 @@
 <?php
-namespace BeInMedia\User\Repositories\Eloquent;
+namespace BeInMedia\Repositories\Eloquent;
 
-use BeInMedia\Core\Repositories\Eloquent\EloquentBaseRepository;
-use BeInMedia\User\Repositories\UserRepository;
-use Illuminate\Support\Facades\Hash;
+use BeInMedia\Models\Expert;
+use BeInMedia\Repositories\ExpertRepository;
 
 
 /**
- * Class EloquentUserRepository.
+ * Class EloquentExpertRepository.
  */
-class EloquentUserRepository extends EloquentBaseRepository implements UserRepository
+class EloquentExpertRepository extends EloquentBaseRepository implements ExpertRepository
 {
-
-    /**
-     * @param      $input
-     * @return bool
-     * @throws \Exception
+    /*
+     *
      */
-    public function updatePassword($input)
+    public function __construct(Expert $model)
     {
-        $user = $this->find(auth()->id());
-
-        if (Hash::check($input['old_password'], $user->password)) {
-            $user->update(['password'=>bcrypt($input['password'])]);
-            return true;
-        }
-        return false;
+        parent::__construct($model);
     }
-
 }

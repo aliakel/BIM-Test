@@ -1935,6 +1935,8 @@ __webpack_require__.r(__webpack_exports__);
 //
 //
 //
+//
+//
 
 /* harmony default export */ __webpack_exports__["default"] = ({
   name: "AppointmentsComponent",
@@ -1943,6 +1945,10 @@ __webpack_require__.r(__webpack_exports__);
     timezone: {
       type: String,
       "default": 'UTC'
+    },
+    isExpert: {
+      type: Boolean,
+      "default": false
     }
   },
   data: function data() {
@@ -2070,8 +2076,15 @@ __webpack_require__.r(__webpack_exports__);
   methods: {
     setSlot: function setSlot(e) {
       var index = e.target.value;
-      this.form.from = this.duration_slots[index].start;
-      this.form.to = this.duration_slots[index].end;
+      this.form.from_time = this.duration_slots[index].start;
+      this.form.to_time = this.duration_slots[index].end;
+    },
+    reset: function reset(slots) {
+      this.times_slots = slots;
+      this.duration_slots = this.times_slots[this.form.duration];
+      this.form.from_time = '';
+      this.form.to_time = '';
+      this.checkIfSlotsAvailable();
     },
     getSlots: function getSlots() {
       var self = this;
@@ -2082,11 +2095,7 @@ __webpack_require__.r(__webpack_exports__);
           date: self.form.day
         }).then(function (data) {
           if (data.data.status === 'success') {
-            self.times_slots = data.data.data;
-            self.duration_slots = self.times_slots[self.form.duration];
-            self.form.from = '';
-            self.form.to = '';
-            self.checkIfSlotsAvailable();
+            self.reset(data.data.data);
           }
 
           self.loading.loading = false;
@@ -2105,7 +2114,7 @@ __webpack_require__.r(__webpack_exports__);
     saveAppointment: function saveAppointment() {
       var self = this;
 
-      if (!this.form.from || !this.form.to) {
+      if (!this.form.from_time || !this.form.to_time) {
         self.$swal({
           position: 'center',
           icon: 'error',
@@ -2137,11 +2146,7 @@ __webpack_require__.r(__webpack_exports__);
             html: data.data.message,
             showConfirmButton: true
           });
-          self.times_slots = data.data.data;
-          self.duration_slots = self.times_slots[self.form.duration];
-          self.form.from = '';
-          self.form.to = '';
-          self.checkIfSlotsAvailable();
+          self.reset(data.data.data);
         }
       })["catch"](function (e) {
         self.loading.loading = false;
@@ -2196,17 +2201,13 @@ __webpack_require__.r(__webpack_exports__);
         var formattedDate = moment(self.form.day).format('YYYY-MM-DD');
 
         if (message.user != window.user_id && dt === formattedDate && message.expert == self.form.expert_id) {
-          self.times_slots = self.updateTimeSlots(message.slots);
-          self.duration_slots = self.times_slots[self.form.duration];
-          self.form.from = '';
-          self.form.to = '';
+          self.reset(self.updateTimeSlots(message.slots));
           self.$swal({
             position: 'center',
             html: 'Timeslots changed',
             icon: 'warning',
             showConfirmButton: true
           });
-          self.checkIfSlotsAvailable();
         }
       });
     }
@@ -50889,12 +50890,34 @@ var render = function() {
   var _c = _vm._self._c || _h
   return _c("div", { staticClass: "table-responsive" }, [
     _c("table", { staticClass: "table table-striped" }, [
-      _vm._m(0),
+      _c("thead", [
+        _c("tr", [
+          _vm.isExpert
+            ? _c("th", { attrs: { scope: "col" } }, [_vm._v("User")])
+            : _vm._e(),
+          _vm._v(" "),
+          _c("th", { attrs: { scope: "col" } }, [_vm._v("Start on")]),
+          _vm._v(" "),
+          _c("th", { attrs: { scope: "col" } }, [_vm._v("End on")]),
+          _vm._v(" "),
+          _c("th", { attrs: { scope: "col" } }, [_vm._v("Duration")]),
+          _vm._v(" "),
+          !_vm.isExpert
+            ? _c("th", { attrs: { scope: "col" } }, [_vm._v("Expert")])
+            : _vm._e(),
+          _vm._v(" "),
+          _c("th", { attrs: { scope: "col" } }, [_vm._v("Actions")])
+        ])
+      ]),
       _vm._v(" "),
       _c(
         "tbody",
         _vm._l(_vm.appointments, function(appointment, index) {
           return _c("tr", { key: appointment.id }, [
+            _vm.isExpert
+              ? _c("td", [_vm._v(" " + _vm._s(appointment.user.name) + " ")])
+              : _vm._e(),
+            _vm._v(" "),
             _c("td", [
               _vm._v(
                 " " +
@@ -50911,16 +50934,19 @@ var render = function() {
               )
             ]),
             _vm._v(" "),
-            _c("td", [
-              _vm._v(" " + _vm._s(appointment.expert.user.name) + " ")
-            ]),
+            _c("td", [_vm._v(" " + _vm._s(appointment.duration) + " Minutes")]),
             _vm._v(" "),
-            _c("td", [_vm._v(" " + _vm._s(appointment.duration) + " ")]),
+            !_vm.isExpert
+              ? _c("td", [
+                  _vm._v(" " + _vm._s(appointment.expert.user.name) + " ")
+                ])
+              : _vm._e(),
             _vm._v(" "),
             _c("td", [
               _c(
                 "a",
                 {
+                  staticClass: "btn btn-sm btn-danger text-white",
                   on: {
                     click: function($event) {
                       $event.preventDefault()
@@ -50938,26 +50964,7 @@ var render = function() {
     ])
   ])
 }
-var staticRenderFns = [
-  function() {
-    var _vm = this
-    var _h = _vm.$createElement
-    var _c = _vm._self._c || _h
-    return _c("thead", [
-      _c("tr", [
-        _c("th", { attrs: { scope: "col" } }, [_vm._v("Start on")]),
-        _vm._v(" "),
-        _c("th", { attrs: { scope: "col" } }, [_vm._v("End on")]),
-        _vm._v(" "),
-        _c("th", { attrs: { scope: "col" } }, [_vm._v("Duration")]),
-        _vm._v(" "),
-        _c("th", { attrs: { scope: "col" } }, [_vm._v("Expert")]),
-        _vm._v(" "),
-        _c("th", { attrs: { scope: "col" } }, [_vm._v("Actions")])
-      ])
-    ])
-  }
-]
+var staticRenderFns = []
 render._withStripped = true
 
 
@@ -51001,7 +51008,7 @@ var render = function() {
             }
           }),
           _vm._v(" "),
-          _c("p", { staticClass: "h5 py-2" }, [
+          _c("p", { staticClass: "h5 py-4 text-center" }, [
             _vm._v("Timezone: " + _vm._s(_vm.timezone))
           ]),
           _vm._v(" "),
@@ -51080,7 +51087,10 @@ var render = function() {
           [
             _c(
               "option",
-              { attrs: { value: "" }, domProps: { selected: !_vm.form.from } },
+              {
+                attrs: { value: "" },
+                domProps: { selected: !_vm.form.from_time }
+              },
               [_vm._v("Select time slot")]
             ),
             _vm._v(" "),
@@ -51088,7 +51098,7 @@ var render = function() {
               return _c("option", { domProps: { value: index } }, [
                 _vm._v(
                   "\n                    " +
-                    _vm._s(slot.start + "-" + slot.end) +
+                    _vm._s(slot.slot) +
                     "\n                "
                 )
               ])
@@ -51098,7 +51108,7 @@ var render = function() {
         )
       ]),
       _vm._v(" "),
-      _vm.form.from && _vm.form.to
+      _vm.form.from_time && _vm.form.to_time
         ? _c("div", { staticClass: "form-group" }, [
             _vm._v(
               "\n            " +
@@ -51106,9 +51116,9 @@ var render = function() {
                   "Your appointment will be on " +
                     _vm.formattedDate() +
                     " from " +
-                    _vm.form.from +
+                    _vm.form.from_time +
                     " to " +
-                    _vm.form.to
+                    _vm.form.to_time
                 ) +
                 "\n        "
             )

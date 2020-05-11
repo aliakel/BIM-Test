@@ -1,6 +1,6 @@
 <?php
 
-namespace BeInMedia\Models;
+namespace BeInMedia\Notifications;
 
 use Illuminate\Auth\Notifications\ResetPassword as Notification;
 use Illuminate\Notifications\Messages\MailMessage;

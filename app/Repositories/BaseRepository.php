@@ -82,6 +82,13 @@ interface BaseRepository
     public function findByMany(array $ids);
 
     /**
+     * Return a collection of element who's id match
+     * @param  $id
+     * @return $model
+     */
+    public function findOrFail($id);
+
+    /**
      * Get resources by an array of attributes
      * @param array $attributes
      * @param null|string $orderBy

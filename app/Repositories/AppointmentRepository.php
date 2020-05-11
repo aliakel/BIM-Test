@@ -1,13 +1,23 @@
 <?php
 namespace BeInMedia\Repositories;
 
-use Illuminate\Http\Request;
+use BeInMedia\Http\Requests\AppointmentsRequest;
+use Illuminate\Database\Eloquent\Collection;
 
 /**
- * Interface ExpertRepository.
+ * Interface AppointmentRepository.
  */
-interface ExpertRepository extends BaseRepository
+interface AppointmentRepository extends BaseRepository
 {
+    /**
+     * @param int|null $user
+     * @return Collection
+     */
+    public function getAppointmentsList(?int $user=null): Collection;
 
-
+    /**
+     * @param AppointmentsRequest $request
+     * @return bool
+     */
+    public function checkSlotAvailability(AppointmentsRequest $request): bool;
 }

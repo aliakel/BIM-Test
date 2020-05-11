@@ -171,9 +171,10 @@ return [
          */
         BeInMedia\Providers\AppServiceProvider::class,
         BeInMedia\Providers\AuthServiceProvider::class,
-         BeInMedia\Providers\BroadcastServiceProvider::class,
+        BeInMedia\Providers\BroadcastServiceProvider::class,
         BeInMedia\Providers\EventServiceProvider::class,
         BeInMedia\Providers\RouteServiceProvider::class,
+        BeInMedia\Providers\RepositoryServiceProvider::class,
 
     ],
 

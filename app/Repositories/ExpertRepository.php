@@ -1,26 +1,13 @@
 <?php
-namespace BeInMedia\User\Repositories;
+namespace BeInMedia\Repositories;
 
-use BeInMedia\Core\Repositories\BaseRepository;
 use Illuminate\Http\Request;
 
 /**
- * Interface UserRepository.
+ * Interface ExpertRepository.
  */
-interface UserRepository extends BaseRepository
+interface ExpertRepository extends BaseRepository
 {
 
-    /**
-     * @param       $id
-     * @param Request $input
-     * @return mixed
-     */
-    public function update($id, $input);
-
-    /**
-     * @param      $input
-     * @return bool
-     */
-    public function updatePassword($input);
 
 }

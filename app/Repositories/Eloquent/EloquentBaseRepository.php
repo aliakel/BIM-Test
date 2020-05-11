@@ -5,12 +5,13 @@ namespace BeInMedia\Repositories\Eloquent;
 use BeInMedia\Repositories\BaseRepository;
 use Exception;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 
 /**
  * Class EloquentBaseRepository
  *
- * @package BeInMedia\Core\Repositories\Eloquent
+ * @package BeInMedia\Repositories\Eloquent
  */
 abstract class EloquentBaseRepository implements BaseRepository
 {
@@ -70,6 +71,15 @@ abstract class EloquentBaseRepository implements BaseRepository
             return $this->model->with($with)->find($id);
         }
         return $this->model->find($id);
+    }
+
+    /**
+     * Return a collection of element who's id match
+     * @param  $id
+     * @return Collection
+     */
+    public function findOrFail($id){
+        return $this->model->findOrFail($id);
     }
 
     /**\

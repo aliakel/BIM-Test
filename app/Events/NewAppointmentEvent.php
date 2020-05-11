@@ -11,9 +11,11 @@ use Illuminate\Queue\SerializesModels;
 class NewAppointmentEvent implements ShouldBroadcast
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
+
     public $slots;
     public $appointment;
-    //public $broadcastQueue = 'appointments';
+    public $broadcastQueue = 'bin';
+
     /**
      * Create a new event instance.
      *
