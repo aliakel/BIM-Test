@@ -12,7 +12,7 @@
                 </tr>
             </thead>
             <tbody>
-                <tr v-for="(appointment,index) in appointments" :key="appointment.id">
+                <tr v-for="(appointment,index) in appointments" >
                     <td v-if="isExpert"> {{appointment.user.name}} </td>
                     <td> {{getTimeInUserTimeZone(appointment.from_time)}} </td>
                     <td> {{getTimeInUserTimeZone(appointment.to_time)}} </td>
@@ -56,14 +56,15 @@
                     self.loading.loading = true;
                     axios.delete('/appointments/'+self.appointments[index].id).then(data => {
                         self.loading.loading = false;
+
+
                         self.$swal({
-                            position: 'center', type: data.data.status,
-                            html: data.data.message,
+                            position: 'center',
+                            icon: data.data.status,
+                            html: 'Removed successfully',
                             showConfirmButton: true
                         });
-                        if (data.data.status === 'success') {
-                            self.appointments.splice(index,1);
-                        }
+                        window.location.reload();
 
                     }).catch(() => {
                         self.loading.loading = false;
@@ -74,6 +75,3 @@
     }
 </script>
 
-<style scoped>
-
-</style>

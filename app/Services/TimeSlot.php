@@ -169,8 +169,11 @@ class TimeSlot
 
             for ($i = 0; $i < $num_of_slots; $i++) {
                 $copy = $start->copy();
+                $slot_copy = $start->copy();
                 $slots[] = [
                     'start' => $copy->format('Y-m-d\TH:i:s.uP '),
+                    'start_slot' => $slot_copy->format('g:iA'),
+                    'end_slot' => $slot_copy->addMinutes($duration)->format('g:iA'),
                     'end' => $copy->addMinutes($duration)->format('Y-m-d\TH:i:s.uP '),
                     'slot' => $start->format('g:iA') . ' - ' . $start->addMinutes($duration)->format('g:iA')
                 ];

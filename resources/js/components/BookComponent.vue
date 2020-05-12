@@ -32,8 +32,8 @@
                     </option>
                 </select>
             </div>
-            <div class="form-group" v-if="form.from_time && form.to_time">
-                {{'Your appointment will be on '+formattedDate()+' from '+form.from_time+' to '+form.to_time}}
+            <div class="form-group" v-if="rang.start && rang.end">
+                {{'Your appointment will be on '+formattedDate()+' from '+rang.start+' to '+rang.end}}
             </div>
             <div class="form-group text-center">
                 <button @click="saveAppointment" class="btn btn-md btn-primary">Submit</button>
@@ -72,7 +72,8 @@
                 duration_slots: [],
                 start_date: '',
                 timezone: '',
-                loading:this.$globalStore.data
+                loading:this.$globalStore.data,
+                rang:{start:'',end:''}
             }
         },
         methods: {
@@ -80,6 +81,8 @@
                 let index = e.target.value;
                 this.form.from_time = this.duration_slots[index].start;
                 this.form.to_time = this.duration_slots[index].end;
+                this.rang.start=this.duration_slots[index].start_slot;
+                this.rang.end=this.duration_slots[index].end_slot;
             },
             reset:function(slots){
                 this.times_slots = slots;
@@ -155,9 +158,16 @@
                 Object.keys(duration).forEach(function (key, index) {
                     duration[key].forEach(function (slot, ind) {
                         moment.tz.setDefault('UTC');
+                        let start=moment.tz(moment(slot.start_slot, 'hh:mm').tz('UTC'), self.other.timezone).format('YYYY-MM-DD hh:mm:ss.uP');
+                        let end=moment.tz(moment(slot.end_slot, 'hh:mm').tz('UTC'), self.other.timezone).format('YYYY-MM-DD hh:mm:ss.uP');
+                        let start_slot=moment.tz(moment(slot.start_slot, 'hh:mm').tz('UTC'), self.other.timezone).format('hh:mm A');
+                        let end_slot=moment.tz(moment(slot.end_slot, 'hh:mm').tz('UTC'), self.other.timezone).format('hh:mm A');
                         slots_in_user_timezone[key].push({
-                            'start': moment.tz(moment(slot.start, 'hh:mm').tz('UTC'), self.other.timezone).format('hh:mm A'),
-                            'end': moment.tz(moment(slot.end, 'hh:mm').tz('UTC'), self.other.timezone).format('hh:mm A')
+                            'start':start,
+                            'end': end,
+                            'slot':start_slot+' - '+end_slot,
+                            'start_slot':start_slot,
+                            'end_slot':end_slot
                         });
                     });
                 });
