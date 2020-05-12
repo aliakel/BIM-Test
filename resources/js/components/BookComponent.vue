@@ -107,7 +107,7 @@
 
             },
             formattedDate:function(){
-                return moment(this.form.date).tz(this.other.timezone).format('DD MMM YYYY');
+                return moment(this.form.from_time,'YYYY-MM-DD hh:mm:ss').tz(this.other.timezone).format('DD MMM YYYY');
             },
             customFormatter(date='') {
                 return date?moment(date).tz(this.other.timezone).format():moment().tz(this.other.timezone).format('YYYY MM DD hh:mm A');
