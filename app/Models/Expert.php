@@ -16,7 +16,7 @@ class Expert extends Model
      * @var array
      */
     protected $fillable = [
-        'job', 'county', 'timezone', 'start_time', 'end_time', 'user_id', 'image'
+        'job', 'country', 'timezone', 'start_time', 'end_time', 'user_id', 'image'
     ];
 
     protected $with = ['user:name,id'];
