@@ -27,7 +27,7 @@
         "@mathieustan/vue-datepicker": "^0.2.3-rc.2",
         "lang.js": "^1.1.14",
         "laravel-echo": "^1.7.0",
-        "moment": "^2.25.3",
+        "moment": "^2.29.2",
         "moment-timezone": "^0.5.28",
         "pusher-js": "^6.0.2",
         "vee-validate": "^3.3.0",
